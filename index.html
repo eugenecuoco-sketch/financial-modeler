@@ -292,6 +292,7 @@
 
             let currentArBalance = 0;
             let totalRevenueRecognized = 0;
+            let totalCashCollected = 0; // NEW: Add cash tracker
             let hasDropped = false; // This flag is set true *after* the drop month is processed
 
             // 4. Run the model month by month
@@ -326,11 +327,27 @@
                     currentArBalance -= monthCash; 
                     
                     if (isDropMonth) {
+                        // --- NEW LOGIC for Installments Drop ---
+                        // 1. Account for this month's revenue (if any)
+                        totalRevenueRecognized += monthRevenue;
+                        // 2. Account for this month's cash (if any)
+                        totalCashCollected += monthCash;
+
+                        // 3. Calculate if a refund is due
+                        // (total cash paid to date) - (total revenue earned to date)
+                        const refundAmount = totalCashCollected - totalRevenueRecognized;
+                        if (refundAmount > 0.01) {
+                            monthCash -= refundAmount; // Issue the refund (negative cash)
+                            currentArBalance += refundAmount; // Refund temporarily increases A/R (we owe them)
+                        }
+                        
+                        // 4. Calculate final A/R write-down
                         const dropWriteDown = currentArBalance;
                         if (dropWriteDown > 0.01) {
-                            monthSales -= dropWriteDown; // Add the negative sale
-                            currentArBalance -= dropWriteDown; // A/R also decreases by the write-down
+                            monthSales -= dropWriteDown; // Negative sale to write off A/R
+                            currentArBalance -= dropWriteDown; // A/R is zeroed out
                         }
+                        // --- End NEW LOGIC ---
                         hasDropped = true; 
                     }
 
@@ -351,8 +368,8 @@
                     if (isDropMonth) {
                         totalRevenueRecognized += monthRevenue; // Recognize this month's revenue
                         
-                        const totalRevenueEarned = revPerMonth * (dropMonthIndex + 1);
-                        const refundAmount = saleAmount - totalRevenueEarned;
+                        // MOD: Use the tracker instead of recalculating
+                        const refundAmount = saleAmount - totalRevenueRecognized; // Use tracker
                         
                         if (refundAmount > 0.01) {
                             monthSales -= refundAmount; // Negative sale for the refund
@@ -377,9 +394,13 @@
                 }
                 // --- End Main Logic Block ---
 
-                // Track total revenue for Paid in Full drops
-                if (paymentMethod === 'paidInFull' && !isDropMonth && !hasDropped && i < revenueDuration) {
-                    totalRevenueRecognized += monthRevenue;
+                // MOD: Track total revenue AND cash for Installment/Paid in Full drops
+                if ((paymentMethod === 'paidInFull' || paymentMethod === 'installments') && !isDropMonth && !hasDropped) {
+                    if (i < revenueDuration) {
+                        totalRevenueRecognized += monthRevenue;
+                    }
+                    // Always track cash collected before drop
+                    totalCashCollected += monthCash;
                 }
 
                 // Handle floating point inaccuracies
@@ -572,5 +593,4 @@
     </script>
 </body>
 </html>
-
 
