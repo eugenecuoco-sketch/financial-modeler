@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Scenario Modeler</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 3. Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for chart responsiveness */
+        .chart-container {
+            position: relative;
+            height: 45vh; /* 45% of the viewport height */
+            width: 100%;
+        }
+        /* Style for number inputs to remove arrows in Chrome/Safari/Edge/Opera */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        /* Style for number inputs to remove arrows in Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Financial Scenario Modeler</h1>
+            <p class="mt-2 text-lg text-gray-600">Model a single sale's impact on revenue, cash, and A/R over time.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- === Input Column === -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-2xl shadow-lg space-y-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Input Variables</h2>
+
+                    <!-- Sale Amount -->
+                    <div>
+                        <label for="totalSaleAmount" class="block text-sm font-medium text-gray-700">Total Sale Amount ($)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" id="totalSaleAmount" value="90000" class="block w-full rounded-md border-gray-300 pl-7 pr-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., 90000">
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500">The total contract value of the sale.</p>
+                    </div>
+
+                    <!-- Sale Date -->
+                    <div>
+                        <label for="saleDate" class="block text-sm font-medium text-gray-700">Sale Date</label>
+                        <input type="month" id="saleDate" value="2025-01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                        <p class="mt-2 text-xs text-gray-500">The month and year the sale is booked.</p>
+                    </div>
+
+                    <!-- Revenue Duration -->
+                    <div>
+                        <label for="revenueDuration" class="block text-sm font-medium text-gray-700">Revenue Duration (Months)</label>
+                        <input type="number" id="revenueDuration" value="9" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 9">
+                        <p class="mt-2 text-xs text-gray-500">The total number of months revenue will be recognized.</p>
+                    </div>
+
+                    <!-- Number of Installments -->
+                    <div>
+                        <label for="numInstallments" class="block text-sm font-medium text-gray-700">Number of Installments</label>
+                        <input type="number" id="numInstallments" value="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 3">
+                        <p class="mt-2 text-xs text-gray-500">The total number of payments the customer will make.</p>
+                    </div>
+
+                    <!-- Payment Start -->
+                    <div>
+                        <label for="paymentStart" class="block text-sm font-medium text-gray-700">Payment Start</label>
+                        <select id="paymentStart" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                            <option value="0">Same Month as Sale</option>
+                            <option value="1" selected>Month After Sale</option>
+                            <option value="2">2 Months After Sale</option>
+                        </select>
+                        <p class="mt-2 text-xs text-gray-500">When the first payment is received, relative to the sale month.</p>
+                    </div>
+
+                    <!-- === NEW: Drop Scenario Section === -->
+                    <div class="space-y-4 pt-4 border-t border-gray-200">
+                        <div class="relative flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="enableDrop" name="enableDrop" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="enableDrop" class="font-medium text-gray-700">Enable Drop Scenario</label>
+                                <p class="text-gray-500">Model a mid-contract cancellation (write-down).</p>
+                            </div>
+                        </div>
+
+                        <div id="dropDateContainer" class="hidden space-y-2">
+                             <label for="dropDate" class="block text-sm font-medium text-gray-700">Drop Date</label>
+                             <input type="month" id="dropDate" value="2025-04" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                             <p class="mt-2 text-xs text-gray-500">The month the cancellation/write-down occurs.</p>
+                        </div>
+                    </div>
+                    <!-- === End Drop Scenario Section === -->
+
+
+                    <!-- Generate Button -->
+                    <button id="generateButton" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200">
+                        Generate Model
+                    </button>
+                </div>
+            </div>
+
+            <!-- === Output Column === -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Visualization Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Scenario Visualization</h2>
+                    <div class="chart-container">
+                        <canvas id="scenarioChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Data Table Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Breakdown</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <!-- 
+                          FIX: Added id="DataTables_Table_0" to the table element.
+                          This ID is required by the JavaScript querySelector to find 
+                          and populate the table's head and body.
+                        -->
+                        <table class="min-w-full divide-y divide-gray-200" id="DataTables_Table_0">
+                            <thead class="bg-gray-50">
+                                <!-- Table header will be injected by JS -->
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const generateBtn = document.getElementById('generateButton');
+        const chartCanvas = document.getElementById('scenarioChart');
+        const enableDropCheckbox = document.getElementById('enableDrop');
+        const dropDateContainer = document.getElementById('dropDateContainer');
+        
+        let scenarioChart; // To hold the chart instance
+
+        // Helper function to format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        };
+
+        // Helper function to format month
+        const formatMonthYear = (date) => {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                year: '2-digit',
+                timeZone: 'UTC' // Use UTC to prevent timezone shifts
+            });
+        };
+
+        function generateModel() {
+            // 1. Get all input values
+            const saleAmount = parseFloat(document.getElementById('totalSaleAmount').value) || 0;
+            const saleDateString = document.getElementById('saleDate').value;
+            const revenueDuration = parseInt(document.getElementById('revenueDuration').value) || 1;
+            const numInstallments = parseInt(document.getElementById('numInstallments').value) || 1;
+            const paymentStartOffset = parseInt(document.getElementById('paymentStart').value) || 0;
+
+            // --- NEW: Get Drop Scenario Inputs ---
+            const isDropEnabled = document.getElementById('enableDrop').checked;
+            const dropDateString = document.getElementById('dropDate').value;
+            let dropMonthIndex = -1; // -1 means no drop
+            
+            // Use '-02' for the day to avoid timezone issues
+            const baseDate = new Date(saleDateString + '-02'); 
+
+            if (isDropEnabled && dropDateString) {
+                const dropDate = new Date(dropDateString + '-02');
+                // Calculate the difference in months
+                dropMonthIndex = (dropDate.getUTCFullYear() - baseDate.getUTCFullYear()) * 12 + (dropDate.getUTCMonth() - baseDate.getUTCMonth());
+                if (dropMonthIndex < 0) dropMonthIndex = -1; // Ensure drop date is not before sale date
+            }
+            // --- End New Inputs ---
+
+
+            // 2. Calculate model parameters
+            const revPerMonth = saleAmount / revenueDuration;
+            const paymentPerInstallment = saleAmount / numInstallments;
+            
+            // Determine total model duration
+            const revenueEndMonth = revenueDuration - 1; // 0-indexed
+            const paymentEndMonth = paymentStartOffset + numInstallments - 1; // 0-indexed
+            let totalDuration = Math.max(revenueEndMonth, paymentEndMonth) + 3; // Run for 2 extra months
+            
+            if (isDropEnabled && dropMonthIndex > -1 && (dropMonthIndex + 3) > totalDuration) {
+                 totalDuration = dropMonthIndex + 3; // Ensure model runs long enough to show drop
+            }
+
+
+            // 3. Initialize data arrays
+            const labels = [];
+            const salesData = [];
+            const revenueData = [];
+            const cashData = [];
+            const arBalanceData = [];
+            let tableHtml = '';
+            let headerHtml = `
+                <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <th class="px-4 py-3">Month</th>
+                    <th class="px-4 py-3">Sales</th>
+                    <th class="px-4 py-3">Revenue</th>
+                    <th class="px-4 py-3">Cash Collected</th>
+                    <th class="px-4 py-3 text-right">A/R Balance</th>
+                </tr>
+            `;
+
+            let currentArBalance = 0;
+            let dropWriteDown = 0;
+            let hasDropped = false; // This flag is set true *after* the drop month is processed
+
+            // 4. Run the model month by month
+            for (let i = 0; i < totalDuration; i++) {
+                const currentDate = new Date(baseDate);
+                currentDate.setUTCMonth(baseDate.getUTCMonth() + i);
+                
+                const monthLabel = formatMonthYear(currentDate);
+                let isDropMonth = (isDropEnabled && i === dropMonthIndex);
+
+                // --- MODIFIED: Calculate this month's values with Drop Logic ---
+                
+                // 1. Sales
+                let monthSales = (i === 0) ? saleAmount : 0;
+                
+                // 2. Revenue
+                // Revenue is recognized *unless* the drop month has already passed.
+                let monthRevenue = (i < revenueDuration) ? revPerMonth : 0;
+                if (hasDropped) { // After drop month
+                    monthRevenue = 0;
+                }
+
+                // 3. Cash
+                // Cash is collected *unless* the drop month has already passed.
+                const isPaymentMonth = (i >= paymentStartOffset && i < (paymentStartOffset + numInstallments));
+                let monthCash = isPaymentMonth ? paymentPerInstallment : 0;
+                if (hasDropped) { // After drop month
+                    monthCash = 0;
+                }
+
+                // 4. A/R Balance and Write-down
+                if (i === 0) {
+                    currentArBalance += saleAmount;
+                }
+                
+                // A/R decreases by cash collected *first*.
+                currentArBalance -= monthCash; 
+                
+                if (isDropMonth) {
+                    // On drop month, calculate write-down *after* cash is collected.
+                    // The write-down is whatever A/R balance is left.
+                    dropWriteDown = currentArBalance;
+                    
+                    if (dropWriteDown > 0.01) { // Handle floating point inaccuracies
+                        monthSales -= dropWriteDown; // Add the negative sale
+                        currentArBalance -= dropWriteDown; // A/R also decreases by the write-down
+                    }
+                    
+                    // Set the flag *after* processing the drop month.
+                    // This ensures future months are zeroed out.
+                    hasDropped = true; 
+                }
+                // --- End Modified Logic ---
+
+
+                // Handle floating point inaccuracies
+                if (Math.abs(currentArBalance) < 0.01) {
+                    currentArBalance = 0;
+                }
+
+                // Push data for chart
+                labels.push(monthLabel);
+                salesData.push(monthSales);
+                revenueData.push(monthRevenue);
+                cashData.push(monthCash);
+                arBalanceData.push(currentArBalance);
+
+                // Build table row
+                // Highlight the drop month
+                const rowClass = isDropMonth ? 'bg-red-50 text-red-900' : 'text-gray-700';
+                tableHtml += `
+                    <tr class="text-sm ${rowClass}">
+                        <td class="px-4 py-3 font-medium">${monthLabel}</td>
+                        <td class="px-4 py-3">${formatCurrency(monthSales)}</td>
+                        <td class="px-4 py-3">${formatCurrency(monthRevenue)}</td>
+                        <td class="px-4 py-3">${formatCurrency(monthCash)}</td>
+                        <td class="px-4 py-3 text-right font-medium">${formatCurrency(currentArBalance)}</td>
+                    </tr>
+                `;
+            }
+
+            // 5. Render the data table
+            document.querySelector("#DataTables_Table_0 > thead").innerHTML = headerHtml;
+            document.querySelector("#DataTables_Table_0 > tbody").innerHTML = tableHtml;
+
+            // 6. Render the chart
+            if (scenarioChart) {
+                scenarioChart.destroy(); // Clear old chart if it exists
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+            scenarioChart = new Chart(ctx, {
+                type: 'bar', // Default type
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sales',
+                            data: salesData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)', // Blue
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Revenue',
+                            data: revenueData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)', // Green
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Cash Collected',
+                            data: cashData,
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)', // Amber
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'A/R Balance',
+                            data: arBalanceData,
+                            type: 'line', // Override to line chart
+                            borderColor: 'rgba(239, 68, 68, 1)', // Red
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.1,
+                            fill: false,
+                            yAxisID: 'y1' // Use secondary axis
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: false,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: { // Primary Y-axis (for bars)
+                            stacked: false,
+                            beginAtZero: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Monthly Amount ($)'
+                            }
+                        },
+                        y1: { // Secondary Y-axis (for line)
+                            beginAtZero: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Ending Balance ($)'
+                            },
+                            grid: {
+                                drawOnChartArea: false, // Only show grid for primary axis
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatCurrency(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- NEW: Event Listener for Checkbox ---
+        enableDropCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                dropDateContainer.classList.remove('hidden');
+            } else {
+                dropDateContainer.classList.add('hidden');
+            }
+            generateModel(); // Re-run model when checkbox changes
+        });
+
+        // Add event listener to the button
+        generateBtn.addEventListener('click', generateModel);
+        
+        // Add event listeners to all inputs to re-run model on change
+        document.getElementById('totalSaleAmount').addEventListener('change', generateModel);
+        document.getElementById('saleDate').addEventListener('change', generateModel);
+        document.getElementById('revenueDuration').addEventListener('change', generateModel);
+        document.getElementById('numInstallments').addEventListener('change', generateModel);
+        // FIX: Changed 'newMouse' to 'generateModel'
+        document.getElementById('paymentStart').addEventListener('change', generateModel);
+        // --- FIX: Removed the stray text that was here ---
+        document.getElementById('dropDate').addEventListener('change', generateModel);
+
+
+        // Generate the model on initial page load with default values
+        document.addEventListener('DOMContentLoaded', generateModel);
+
+    </script>
+</body>
+</html>
+
+
+
