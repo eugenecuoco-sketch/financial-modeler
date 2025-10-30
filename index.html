@@ -74,9 +74,11 @@
 
                     <!-- MOD: Revenue Duration (now in a container) -->
                     <div id="revenueDurationContainer">
-                        <label for="revenueDuration" class="block text-sm font-medium text-gray-700">Revenue Duration (Months)</label>
+                        <!-- MOD: Added ID to label -->
+                        <label for="revenueDuration" class="block text-sm font-medium text-gray-700" id="revenueDurationLabel">Revenue Duration (Months)</label>
                         <input type="number" id="revenueDuration" value="9" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 9">
-                        <p class="mt-2 text-xs text-gray-500">The total number of months revenue will be recognized.</p>
+                        <!-- MOD: Added ID to helper text -->
+                        <p class="mt-2 text-xs text-gray-500" id="revenueDurationHelperText">The total number of months revenue will be recognized.</p>
                     </div>
 
                     <!-- NEW: Estimated Subscription (hidden by default) -->
@@ -91,26 +93,36 @@
                         <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Payment Method</label>
                         <select id="paymentMethod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
                             <option value="paidInFull" selected>Paid in Full</option>
-                            <option value="installments">Installments</option>
+                            <!-- MOD: Renamed value and text -->
+                            <option value="installmentsTraditional">Installment (traditional)</option>
+                            <!-- NEW: Added Kaplan Hybrid option -->
+                            <option value="kaplanHybrid">Kaplan College Advantage (hybrid)</option>
                             <option value="subscription">Subscription</option>
                         </select>
                         <p class="mt-2 text-xs text-gray-500">How the customer pays for the service.</p>
                     </div>
                     <!-- === End Payment Method === -->
 
-                    <!-- === Installment Specific Inputs === -->
-                    <div id="installmentInputs" class="space-y-6 hidden">
+                    <!-- === MOD: Traditional Installment Specific Inputs === -->
+                    <!-- MOD: Renamed ID -->
+                    <div id="traditionalInstallmentInputs" class="space-y-6 hidden">
                         <!-- Number of Installments -->
                         <div>
-                            <label for="numInstallments" class="block text-sm font-medium text-gray-700">Number of Installments</label>
-                            <input type="number" id="numInstallments" value="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 3">
-                            <p class="mt-2 text-xs text-gray-500">The total number of payments the customer will make.</p>
+                            <!-- MOD: Renamed label 'for' -->
+                            <label for="numInstallmentsTraditional" class="block text-sm font-medium text-gray-700">Number of Installments</label>
+                            <!-- MOD: Changed from input type=number to a select dropdown -->
+                            <select id="numInstallmentsTraditional" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                                <option value="3" selected>3</option>
+                                <option value="4">4</option>
+                            </select>
+                            <p class="mt-2 text-xs text-gray-500">The total number of payments (3 or 4).</p>
                         </div>
 
                         <!-- Payment Start -->
                         <div>
-                            <label for="paymentStart" class="block text-sm font-medium text-gray-700">Payment Start</label>
-                            <select id="paymentStart" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                            <!-- MOD: Renamed label 'for' and ID -->
+                            <label for="paymentStartTraditional" class="block text-sm font-medium text-gray-700">Payment Start</label>
+                            <select id="paymentStartTraditional" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
                                 <option value="0" selected>Same Month as Sale</option>
                             </select>
                             <p class="mt-2 text-xs text-gray-500">Payment is taken in the same month as the sale.</p>
@@ -219,8 +231,9 @@
             
             const paymentMethod = document.getElementById('paymentMethod').value;
             
-            const numInstallments = parseInt(document.getElementById('numInstallments').value) || 1;
-            const paymentStartOffset = parseInt(document.getElementById('paymentStart').value) || 0;
+            // MOD: Get values from NEW traditional dropdowns
+            const numInstallmentsTraditional = parseInt(document.getElementById('numInstallmentsTraditional').value) || 3;
+            const paymentStartOffsetTraditional = parseInt(document.getElementById('paymentStartTraditional').value) || 0;
 
             // Get Drop Scenario Inputs
             const isDropEnabled = document.getElementById('enableDrop').checked;
@@ -241,25 +254,45 @@
             let revPerMonth = 0;
             let monthlySubscriptionAmount = 0;
             let paymentPerInstallment = 0;
+            let numInstallments = 0; // MOD: Declare here
+            let paymentStartOffset = 0; // MOD: Declare here
 
             if (paymentMethod === 'subscription') {
                 monthlySubscriptionAmount = saleAmountInput;
                 revenueDuration = estimatedSubscriptionMonthsInput;
                 // saleAmount remains 0 (not used)
-                // revPerMonth remains 0 (not used)
-            } else { // installments or paidInFull
+            } else if (paymentMethod === 'paidInFull') {
                 saleAmount = saleAmountInput;
                 revenueDuration = revenueDurationInput;
+                // numInstallments & paymentStartOffset remain 0 (not applicable)
+            } else if (paymentMethod === 'installmentsTraditional') { // MOD: Renamed
+                saleAmount = saleAmountInput;
+                revenueDuration = revenueDurationInput;
+                numInstallments = numInstallmentsTraditional; // MOD: Use new var
+                paymentStartOffset = paymentStartOffsetTraditional; // MOD: Use new var
+            } else if (paymentMethod === 'kaplanHybrid') { // NEW: Kaplan logic
+                saleAmount = saleAmountInput;
+                revenueDuration = revenueDurationInput; // Rev duration IS the payment duration
+                numInstallments = revenueDurationInput; // The key logic
+                paymentStartOffset = 0; // Always starts in month 0
+            }
+            
+            // MOD: Set revPerMonth for all non-subscription types
+            if (paymentMethod !== 'subscription' && revenueDuration > 0) {
                 revPerMonth = saleAmount / revenueDuration;
-                // monthlySubscriptionAmount remains 0 (not used)
             }
             
             const revenueEndMonth = revenueDuration - 1; // 0-indexed
             let totalDuration = 0;
 
             // --- FIX: Calculate duration and parameters based on payment method ---
-            if (paymentMethod === 'installments') {
-                paymentPerInstallment = saleAmount / numInstallments;
+            // MOD: Updated logic to include new methods
+            if (paymentMethod === 'installmentsTraditional' || paymentMethod === 'kaplanHybrid') {
+                if (numInstallments > 0) { // Avoid divide by zero
+                    paymentPerInstallment = saleAmount / numInstallments;
+                } else {
+                    paymentPerInstallment = 0;
+                }
                 const paymentEndMonth = paymentStartOffset + numInstallments - 1; // 0-indexed
                 totalDuration = Math.max(revenueEndMonth, paymentEndMonth) + 3; // Run for 2 extra months
             } else if (paymentMethod === 'paidInFull') {
@@ -309,7 +342,8 @@
                 
                 // --- FIX: Main logic block based on paymentMethod ---
 
-                if (paymentMethod === 'installments') {
+                // MOD: Updated to include kaplanHybrid
+                if (paymentMethod === 'installmentsTraditional' || paymentMethod === 'kaplanHybrid') {
                     // 1. Sales
                     monthSales = (i === 0) ? saleAmount : 0;
                     
@@ -395,7 +429,8 @@
                 // --- End Main Logic Block ---
 
                 // MOD: Track total revenue AND cash for Installment/Paid in Full drops
-                if ((paymentMethod === 'paidInFull' || paymentMethod === 'installments') && !isDropMonth && !hasDropped) {
+                // MOD: Updated to include kaplanHybrid
+                if ((paymentMethod === 'paidInFull' || paymentMethod === 'installmentsTraditional' || paymentMethod === 'kaplanHybrid') && !isDropMonth && !hasDropped) {
                     if (i < revenueDuration) {
                         totalRevenueRecognized += monthRevenue;
                     }
@@ -540,31 +575,43 @@
         
         // === MOD: Updated Event Listener for Payment Method ===
         const paymentMethodSelect = document.getElementById('paymentMethod');
-        const installmentInputsContainer = document.getElementById('installmentInputs');
+        // MOD: Renamed container ID
+        const traditionalInstallmentInputsContainer = document.getElementById('traditionalInstallmentInputs');
         const revenueDurationContainer = document.getElementById('revenueDurationContainer');
+        const revenueDurationLabel = document.getElementById('revenueDurationLabel'); // NEW
+        const revenueDurationHelperText = document.getElementById('revenueDurationHelperText'); // NEW
         const subscriptionDurationContainer = document.getElementById('subscriptionDurationContainer');
         const saleAmountLabel = document.getElementById('saleAmountLabel');
         const saleAmountHelperText = document.getElementById('saleAmountHelperText');
 
 
         paymentMethodSelect.addEventListener('change', function() {
-            if (this.value === 'installments') {
-                installmentInputsContainer.classList.remove('hidden');
+            // Reset all containers
+            traditionalInstallmentInputsContainer.classList.add('hidden');
+            revenueDurationContainer.classList.add('hidden');
+            subscriptionDurationContainer.classList.add('hidden');
+            
+            // Reset labels/text to default
+            saleAmountLabel.textContent = 'Total Sale Amount ($)';
+            saleAmountHelperText.textContent = 'The total contract value of the sale.';
+            revenueDurationLabel.textContent = 'Revenue Duration (Months)'; // NEW
+            revenueDurationHelperText.textContent = 'The total number of months revenue will be recognized.'; // NEW
+
+            if (this.value === 'installmentsTraditional') { // MOD: Renamed
+                traditionalInstallmentInputsContainer.classList.remove('hidden');
                 revenueDurationContainer.classList.remove('hidden');
-                subscriptionDurationContainer.classList.add('hidden');
-                saleAmountLabel.textContent = 'Total Sale Amount ($)';
-                saleAmountHelperText.textContent = 'The total contract value of the sale.';
 
             } else if (this.value === 'paidInFull') {
-                installmentInputsContainer.classList.add('hidden');
                 revenueDurationContainer.classList.remove('hidden');
-                subscriptionDurationContainer.classList.add('hidden');
-                saleAmountLabel.textContent = 'Total Sale Amount ($)';
-                saleAmountHelperText.textContent = 'The total contract value of the sale.';
+            
+            } else if (this.value === 'kaplanHybrid') { // NEW
+                revenueDurationContainer.classList.remove('hidden');
+                // MOD: Change label/text for KCA
+                revenueDurationLabel.textContent = 'Revenue & Payment Duration (Months)';
+                revenueDurationHelperText.textContent = 'The number of months for both revenue and installment payments.';
 
             } else if (this.value === 'subscription') {
-                installmentInputsContainer.classList.add('hidden');
-                revenueDurationContainer.classList.add('hidden');
+                // --- FIX: This was incorrectly adding 'hidden' ---
                 subscriptionDurationContainer.classList.remove('hidden');
                 saleAmountLabel.textContent = 'Monthly Subscription Amount ($)';
                 saleAmountHelperText.textContent = 'The monthly recurring charge for the subscription.';
@@ -582,15 +629,21 @@
         document.getElementById('saleDate').addEventListener('change', generateModel);
         document.getElementById('revenueDuration').addEventListener('change', generateModel);
         document.getElementById('estimatedSubscriptionMonths').addEventListener('change', generateModel); // NEW
-        document.getElementById('numInstallments').addEventListener('change', generateModel);
-        document.getElementById('paymentStart').addEventListener('change', generateModel);
+        // MOD: Updated IDs for new dropdowns
+        document.getElementById('numInstallmentsTraditional').addEventListener('change', generateModel);
+        document.getElementById('paymentStartTraditional').addEventListener('change', generateModel);
         document.getElementById('dropDate').addEventListener('change', generateModel);
 
 
         // Generate the model on initial page load with default values
-        document.addEventListener('DOMContentLoaded', generateModel);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Manually trigger the change event logic to set the correct initial UI state
+            paymentMethodSelect.dispatchEvent(new Event('change'));
+            // generateModel() is already called inside the change event, so no need to call it twice.
+        });
 
     </script>
 </body>
 </html>
+
 
