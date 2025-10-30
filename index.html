@@ -51,16 +51,18 @@
                 <div class="bg-white p-6 rounded-2xl shadow-lg space-y-6">
                     <h2 class="text-xl font-semibold text-gray-900">Input Variables</h2>
 
-                    <!-- Sale Amount -->
+                    <!-- Sale Amount / Monthly Amount -->
                     <div>
-                        <label for="totalSaleAmount" class="block text-sm font-medium text-gray-700">Total Sale Amount ($)</label>
+                        <!-- MOD: Added id to label for dynamic text -->
+                        <label for="totalSaleAmount" class="block text-sm font-medium text-gray-700" id="saleAmountLabel">Total Sale Amount ($)</label>
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
-                            <input type="number" id="totalSaleAmount" value="90000" class="block w-full rounded-md border-gray-300 pl-7 pr-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., 90000">
+                            <input type="number" id="totalSaleAmount" value="1000" class="block w-full rounded-md border-gray-300 pl-7 pr-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., 1000">
                         </div>
-                        <p class="mt-2 text-xs text-gray-500">The total contract value of the sale.</p>
+                        <!-- MOD: Added id to p for dynamic text -->
+                        <p class="mt-2 text-xs text-gray-500" id="saleAmountHelperText">The total contract value of the sale.</p>
                     </div>
 
                     <!-- Sale Date -->
@@ -70,30 +72,51 @@
                         <p class="mt-2 text-xs text-gray-500">The month and year the sale is booked.</p>
                     </div>
 
-                    <!-- Revenue Duration -->
-                    <div>
+                    <!-- MOD: Revenue Duration (now in a container) -->
+                    <div id="revenueDurationContainer">
                         <label for="revenueDuration" class="block text-sm font-medium text-gray-700">Revenue Duration (Months)</label>
                         <input type="number" id="revenueDuration" value="9" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 9">
                         <p class="mt-2 text-xs text-gray-500">The total number of months revenue will be recognized.</p>
                     </div>
 
-                    <!-- Number of Installments -->
-                    <div>
-                        <label for="numInstallments" class="block text-sm font-medium text-gray-700">Number of Installments</label>
-                        <input type="number" id="numInstallments" value="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 3">
-                        <p class="mt-2 text-xs text-gray-500">The total number of payments the customer will make.</p>
+                    <!-- NEW: Estimated Subscription (hidden by default) -->
+                    <div id="subscriptionDurationContainer" class="hidden">
+                        <label for="estimatedSubscriptionMonths" class="block text-sm font-medium text-gray-700">Estimated Subscription (Months)</label>
+                        <input type="number" id="estimatedSubscriptionMonths" value="12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 12">
+                        <p class="mt-2 text-xs text-gray-500">The estimated number of months the subscription will be active.</p>
                     </div>
 
-                    <!-- Payment Start -->
+                    <!-- === NEW: Payment Method === -->
                     <div>
-                        <label for="paymentStart" class="block text-sm font-medium text-gray-700">Payment Start</label>
-                        <select id="paymentStart" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
-                            <option value="0">Same Month as Sale</option>
-                            <option value="1" selected>Month After Sale</option>
-                            <option value="2">2 Months After Sale</option>
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select id="paymentMethod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                            <option value="paidInFull" selected>Paid in Full</option>
+                            <option value="installments">Installments</option>
+                            <option value="subscription">Subscription</option>
                         </select>
-                        <p class="mt-2 text-xs text-gray-500">When the first payment is received, relative to the sale month.</p>
+                        <p class="mt-2 text-xs text-gray-500">How the customer pays for the service.</p>
                     </div>
+                    <!-- === End Payment Method === -->
+
+                    <!-- === Installment Specific Inputs === -->
+                    <div id="installmentInputs" class="space-y-6 hidden">
+                        <!-- Number of Installments -->
+                        <div>
+                            <label for="numInstallments" class="block text-sm font-medium text-gray-700">Number of Installments</label>
+                            <input type="number" id="numInstallments" value="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3" placeholder="e.g., 3">
+                            <p class="mt-2 text-xs text-gray-500">The total number of payments the customer will make.</p>
+                        </div>
+
+                        <!-- Payment Start -->
+                        <div>
+                            <label for="paymentStart" class="block text-sm font-medium text-gray-700">Payment Start</label>
+                            <select id="paymentStart" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2 px-3">
+                                <option value="0" selected>Same Month as Sale</option>
+                            </select>
+                            <p class="mt-2 text-xs text-gray-500">Payment is taken in the same month as the sale.</p>
+                        </div>
+                    </div>
+                    <!-- === End Installment Specific Inputs === -->
 
                     <!-- === NEW: Drop Scenario Section === -->
                     <div class="space-y-4 pt-4 border-t border-gray-200">
@@ -188,38 +211,63 @@
 
         function generateModel() {
             // 1. Get all input values
-            const saleAmount = parseFloat(document.getElementById('totalSaleAmount').value) || 0;
+            // --- MOD: Get all possible inputs first ---
+            const saleAmountInput = parseFloat(document.getElementById('totalSaleAmount').value) || 0;
             const saleDateString = document.getElementById('saleDate').value;
-            const revenueDuration = parseInt(document.getElementById('revenueDuration').value) || 1;
+            const revenueDurationInput = parseInt(document.getElementById('revenueDuration').value) || 1;
+            const estimatedSubscriptionMonthsInput = parseInt(document.getElementById('estimatedSubscriptionMonths').value) || 1;
+            
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
             const numInstallments = parseInt(document.getElementById('numInstallments').value) || 1;
             const paymentStartOffset = parseInt(document.getElementById('paymentStart').value) || 0;
 
-            // --- NEW: Get Drop Scenario Inputs ---
+            // Get Drop Scenario Inputs
             const isDropEnabled = document.getElementById('enableDrop').checked;
             const dropDateString = document.getElementById('dropDate').value;
             let dropMonthIndex = -1; // -1 means no drop
             
-            // Use '-02' for the day to avoid timezone issues
-            const baseDate = new Date(saleDateString + '-02'); 
+            const baseDate = new Date(saleDateString + '-02'); // Use '-02' for the day to avoid timezone issues
 
             if (isDropEnabled && dropDateString) {
                 const dropDate = new Date(dropDateString + '-02');
-                // Calculate the difference in months
                 dropMonthIndex = (dropDate.getUTCFullYear() - baseDate.getUTCFullYear()) * 12 + (dropDate.getUTCMonth() - baseDate.getUTCMonth());
-                if (dropMonthIndex < 0) dropMonthIndex = -1; // Ensure drop date is not before sale date
+                if (dropMonthIndex < 0) dropMonthIndex = -1; 
             }
-            // --- End New Inputs ---
-
-
-            // 2. Calculate model parameters
-            const revPerMonth = saleAmount / revenueDuration;
-            const paymentPerInstallment = saleAmount / numInstallments;
             
-            // Determine total model duration
+            // --- MOD: Set model parameters based on Payment Method ---
+            let saleAmount = 0; // This will be the Total Contract Value for Installments/PIF
+            let revenueDuration = 0; // This is the total months for the model
+            let revPerMonth = 0;
+            let monthlySubscriptionAmount = 0;
+            let paymentPerInstallment = 0;
+
+            if (paymentMethod === 'subscription') {
+                monthlySubscriptionAmount = saleAmountInput;
+                revenueDuration = estimatedSubscriptionMonthsInput;
+                // saleAmount remains 0 (not used)
+                // revPerMonth remains 0 (not used)
+            } else { // installments or paidInFull
+                saleAmount = saleAmountInput;
+                revenueDuration = revenueDurationInput;
+                revPerMonth = saleAmount / revenueDuration;
+                // monthlySubscriptionAmount remains 0 (not used)
+            }
+            
             const revenueEndMonth = revenueDuration - 1; // 0-indexed
-            const paymentEndMonth = paymentStartOffset + numInstallments - 1; // 0-indexed
-            let totalDuration = Math.max(revenueEndMonth, paymentEndMonth) + 3; // Run for 2 extra months
-            
+            let totalDuration = 0;
+
+            // --- FIX: Calculate duration and parameters based on payment method ---
+            if (paymentMethod === 'installments') {
+                paymentPerInstallment = saleAmount / numInstallments;
+                const paymentEndMonth = paymentStartOffset + numInstallments - 1; // 0-indexed
+                totalDuration = Math.max(revenueEndMonth, paymentEndMonth) + 3; // Run for 2 extra months
+            } else if (paymentMethod === 'paidInFull') {
+                totalDuration = revenueEndMonth + 3; // Duration is driven by revenue
+            } else if (paymentMethod === 'subscription') {
+                totalDuration = revenueEndMonth + 3; // Duration is driven by revenue
+            }
+
             if (isDropEnabled && dropMonthIndex > -1 && (dropMonthIndex + 3) > totalDuration) {
                  totalDuration = dropMonthIndex + 3; // Ensure model runs long enough to show drop
             }
@@ -243,7 +291,7 @@
             `;
 
             let currentArBalance = 0;
-            let dropWriteDown = 0;
+            let totalRevenueRecognized = 0;
             let hasDropped = false; // This flag is set true *after* the drop month is processed
 
             // 4. Run the model month by month
@@ -254,50 +302,85 @@
                 const monthLabel = formatMonthYear(currentDate);
                 let isDropMonth = (isDropEnabled && i === dropMonthIndex);
 
-                // --- MODIFIED: Calculate this month's values with Drop Logic ---
+                let monthSales = 0;
+                let monthRevenue = 0;
+                let monthCash = 0;
                 
-                // 1. Sales
-                let monthSales = (i === 0) ? saleAmount : 0;
-                
-                // 2. Revenue
-                // Revenue is recognized *unless* the drop month has already passed.
-                let monthRevenue = (i < revenueDuration) ? revPerMonth : 0;
-                if (hasDropped) { // After drop month
-                    monthRevenue = 0;
-                }
+                // --- FIX: Main logic block based on paymentMethod ---
 
-                // 3. Cash
-                // Cash is collected *unless* the drop month has already passed.
-                const isPaymentMonth = (i >= paymentStartOffset && i < (paymentStartOffset + numInstallments));
-                let monthCash = isPaymentMonth ? paymentPerInstallment : 0;
-                if (hasDropped) { // After drop month
-                    monthCash = 0;
-                }
-
-                // 4. A/R Balance and Write-down
-                if (i === 0) {
-                    currentArBalance += saleAmount;
-                }
-                
-                // A/R decreases by cash collected *first*.
-                currentArBalance -= monthCash; 
-                
-                if (isDropMonth) {
-                    // On drop month, calculate write-down *after* cash is collected.
-                    // The write-down is whatever A/R balance is left.
-                    dropWriteDown = currentArBalance;
+                if (paymentMethod === 'installments') {
+                    // 1. Sales
+                    monthSales = (i === 0) ? saleAmount : 0;
                     
-                    if (dropWriteDown > 0.01) { // Handle floating point inaccuracies
-                        monthSales -= dropWriteDown; // Add the negative sale
-                        currentArBalance -= dropWriteDown; // A/R also decreases by the write-down
+                    // 2. Revenue
+                    monthRevenue = (i < revenueDuration) ? revPerMonth : 0;
+                    if (hasDropped) { monthRevenue = 0; }
+
+                    // 3. Cash
+                    const isPaymentMonth = (i >= paymentStartOffset && i < (paymentStartOffset + numInstallments));
+                    monthCash = isPaymentMonth ? paymentPerInstallment : 0;
+                    if (hasDropped) { monthCash = 0; }
+
+                    // 4. A/R Balance and Write-down
+                    if (i === 0) { currentArBalance += saleAmount; }
+                    currentArBalance -= monthCash; 
+                    
+                    if (isDropMonth) {
+                        const dropWriteDown = currentArBalance;
+                        if (dropWriteDown > 0.01) {
+                            monthSales -= dropWriteDown; // Add the negative sale
+                            currentArBalance -= dropWriteDown; // A/R also decreases by the write-down
+                        }
+                        hasDropped = true; 
+                    }
+
+                } else if (paymentMethod === 'paidInFull') {
+                    // 1. Sales
+                    monthSales = (i === 0) ? saleAmount : 0;
+                    
+                    // 2. Revenue
+                    monthRevenue = (i < revenueDuration) ? revPerMonth : 0;
+                    if (hasDropped) { monthRevenue = 0; }
+                    
+                    // 3. Cash
+                    monthCash = (i === 0) ? saleAmount : 0;
+                    
+                    // 4. A/R (is always 0)
+                    // No A/R balance is ever built.
+                    
+                    if (isDropMonth) {
+                        totalRevenueRecognized += monthRevenue; // Recognize this month's revenue
+                        
+                        const totalRevenueEarned = revPerMonth * (dropMonthIndex + 1);
+                        const refundAmount = saleAmount - totalRevenueEarned;
+                        
+                        if (refundAmount > 0.01) {
+                            monthSales -= refundAmount; // Negative sale for the refund
+                            monthCash -= refundAmount;  // Negative cash (refund)
+                        }
+                        
+                        hasDropped = true;
+                    }
+
+                } else if (paymentMethod === 'subscription') {
+                    if (i < revenueDuration && !hasDropped) {
+                        monthSales = monthlySubscriptionAmount;
+                        monthRevenue = monthlySubscriptionAmount;
+                        monthCash = monthlySubscriptionAmount;
                     }
                     
-                    // Set the flag *after* processing the drop month.
-                    // This ensures future months are zeroed out.
-                    hasDropped = true; 
+                    // A/R is always 0 as Sale and Cash offset.
+                    
+                    if (isDropMonth) {
+                        hasDropped = true;
+                    }
                 }
-                // --- End Modified Logic ---
+                // --- End Main Logic Block ---
 
+                // Track total revenue for Paid in Full drops
+                if (paymentMethod === 'paidInFull' && !isDropMonth && !hasDropped && i < revenueDuration) {
+                    totalRevenueRecognized += monthRevenue;
+                }
 
                 // Handle floating point inaccuracies
                 if (Math.abs(currentArBalance) < 0.01) {
@@ -312,7 +395,6 @@
                 arBalanceData.push(currentArBalance);
 
                 // Build table row
-                // Highlight the drop month
                 const rowClass = isDropMonth ? 'bg-red-50 text-red-900' : 'text-gray-700';
                 tableHtml += `
                     <tr class="text-sm ${rowClass}">
@@ -327,6 +409,7 @@
 
             // 5. Render the data table
             document.querySelector("#DataTables_Table_0 > thead").innerHTML = headerHtml;
+            // --- FIX: Corrected the typo in the querySelector ---
             document.querySelector("#DataTables_Table_0 > tbody").innerHTML = tableHtml;
 
             // 6. Render the chart
@@ -424,7 +507,7 @@
             });
         }
         
-        // --- NEW: Event Listener for Checkbox ---
+        // --- Event Listener for Checkbox ---
         enableDropCheckbox.addEventListener('change', function() {
             if (this.checked) {
                 dropDateContainer.classList.remove('hidden');
@@ -433,6 +516,42 @@
             }
             generateModel(); // Re-run model when checkbox changes
         });
+        
+        // === MOD: Updated Event Listener for Payment Method ===
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+        const installmentInputsContainer = document.getElementById('installmentInputs');
+        const revenueDurationContainer = document.getElementById('revenueDurationContainer');
+        const subscriptionDurationContainer = document.getElementById('subscriptionDurationContainer');
+        const saleAmountLabel = document.getElementById('saleAmountLabel');
+        const saleAmountHelperText = document.getElementById('saleAmountHelperText');
+
+
+        paymentMethodSelect.addEventListener('change', function() {
+            if (this.value === 'installments') {
+                installmentInputsContainer.classList.remove('hidden');
+                revenueDurationContainer.classList.remove('hidden');
+                subscriptionDurationContainer.classList.add('hidden');
+                saleAmountLabel.textContent = 'Total Sale Amount ($)';
+                saleAmountHelperText.textContent = 'The total contract value of the sale.';
+
+            } else if (this.value === 'paidInFull') {
+                installmentInputsContainer.classList.add('hidden');
+                revenueDurationContainer.classList.remove('hidden');
+                subscriptionDurationContainer.classList.add('hidden');
+                saleAmountLabel.textContent = 'Total Sale Amount ($)';
+                saleAmountHelperText.textContent = 'The total contract value of the sale.';
+
+            } else if (this.value === 'subscription') {
+                installmentInputsContainer.classList.add('hidden');
+                revenueDurationContainer.classList.add('hidden');
+                subscriptionDurationContainer.classList.remove('hidden');
+                saleAmountLabel.textContent = 'Monthly Subscription Amount ($)';
+                saleAmountHelperText.textContent = 'The monthly recurring charge for the subscription.';
+            }
+            generateModel(); // Re-run model when payment method changes
+        });
+        // === End Event Listener ===
+
 
         // Add event listener to the button
         generateBtn.addEventListener('click', generateModel);
@@ -441,10 +560,9 @@
         document.getElementById('totalSaleAmount').addEventListener('change', generateModel);
         document.getElementById('saleDate').addEventListener('change', generateModel);
         document.getElementById('revenueDuration').addEventListener('change', generateModel);
+        document.getElementById('estimatedSubscriptionMonths').addEventListener('change', generateModel); // NEW
         document.getElementById('numInstallments').addEventListener('change', generateModel);
-        // FIX: Changed 'newMouse' to 'generateModel'
         document.getElementById('paymentStart').addEventListener('change', generateModel);
-        // --- FIX: Removed the stray text that was here ---
         document.getElementById('dropDate').addEventListener('change', generateModel);
 
 
@@ -454,6 +572,5 @@
     </script>
 </body>
 </html>
-
 
 
